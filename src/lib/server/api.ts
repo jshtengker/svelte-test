@@ -1,7 +1,13 @@
 import { error } from '@sveltejs/kit';
 import type { ApiResponse } from '#lib/types/api';
 
-const GIN_API_URL = process.env.GIN_API_URL || 'http://localhost:9001';
+function getGinApiUrl(): string {
+	const url = process.env.GIN_API_URL;
+	if (!url) {
+		throw new Error('FATAL: GIN_API_URL environment variable is not defined in .env');
+	}
+	return url;
+}
 
 /**
  * Standard typed server-side fetcher for the Gin backend.
@@ -12,7 +18,7 @@ export async function fetchGin<T>(
 	eventFetch: typeof fetch,
 	options: RequestInit = {}
 ): Promise<T> {
-	const baseUrl = GIN_API_URL.replace(/\/+$/, '');
+	const baseUrl = getGinApiUrl().replace(/\/+$/, '');
 	const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 	const url = `${baseUrl}${path}`;
 
@@ -31,7 +37,7 @@ export async function fetchGin<T>(
 		console.error(`[Gin API] Failed to connect to ${url}:`, message);
 		throw error(
 			503,
-			`Backend service unreachable at ${baseUrl}. Ensure your Go Gin server is running on port 9001.`
+			`Backend service unreachable at ${baseUrl}. Ensure your Go Gin backend is running.`
 		);
 	}
 

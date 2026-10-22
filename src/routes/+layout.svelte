@@ -2,7 +2,8 @@
 	import './layout.css';
 	import { browser } from '$app/env';
 	import { page, navigating } from '$app/state';
-	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+	import { QueryClientProvider } from '@tanstack/svelte-query';
+	import { getQueryClient } from '#lib/queries/client';
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types';
 
@@ -14,16 +15,40 @@
 
 	let { children }: LayoutProps = $props();
 
-	const queryClient = new QueryClient({
-		defaultOptions: {
-			queries: {
-				enabled: browser,
-				staleTime: 1000 * 60, // Fresh for 60 seconds
-				gcTime: 1000 * 60 * 5, // Cached in memory for 5 minutes
-				refetchOnWindowFocus: true
-			}
+	const queryClient = getQueryClient();
+
+	function isTargetCached(targetPath: string): boolean {
+		if (!browser) return false;
+		if (targetPath === '/') {
+			return Boolean(
+				queryClient.getQueryData(['products', 1, 4]) &&
+				queryClient.getQueryData(['orders', 1, 4]) &&
+				queryClient.getQueryData(['users', 1, 4])
+			);
 		}
-	});
+		if (targetPath === '/products') {
+			return Boolean(queryClient.getQueryData(['products', 1, 10]));
+		}
+		if (targetPath.startsWith('/products/')) {
+			const id = targetPath.replace('/products/', '');
+			return Boolean(queryClient.getQueryData(['product', id]));
+		}
+		if (targetPath === '/orders') {
+			return Boolean(queryClient.getQueryData(['orders', 1, 10]));
+		}
+		if (targetPath.startsWith('/orders/')) {
+			const id = targetPath.replace('/orders/', '');
+			return Boolean(queryClient.getQueryData(['order', id]));
+		}
+		if (targetPath === '/users') {
+			return Boolean(queryClient.getQueryData(['users', 1, 10]));
+		}
+		if (targetPath.startsWith('/users/')) {
+			const id = targetPath.replace('/users/', '');
+			return Boolean(queryClient.getQueryData(['user', id]));
+		}
+		return false;
+	}
 
 	const navItems = [
 		{ name: 'Overview', href: '/' },
@@ -107,7 +132,7 @@
 							></span>
 							<span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
 						</span>
-						<span>Gin Backend :9001</span>
+						<span>Gin Backend (BFF)</span>
 					</div>
 				</div>
 			</div>
@@ -127,9 +152,9 @@
 			</div>
 		</header>
 
-		<!-- Main Body with Instant Skeleton Loading -->
+		<!-- Main Body with Instant Skeleton Loading (only when destination is not cached) -->
 		<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-			{#if navigating.to}
+			{#if navigating.to && !isTargetCached(navigating.to.url.pathname)}
 				{@const targetPath = navigating.to.url.pathname}
 				{#if targetPath === '/'}
 					<DashboardSkeleton />
@@ -159,7 +184,7 @@
 				class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6 lg:px-8"
 			>
 				<p>Consuming Go (Gin) REST API via SvelteKit BFF + TanStack Query</p>
-				<p class="font-mono text-[11px] text-slate-400">Backend target: http://localhost:9001</p>
+				<p class="font-mono text-[11px] text-slate-400">Connected via SvelteKit BFF Gateway</p>
 			</div>
 		</footer>
 	</div>

@@ -28,8 +28,7 @@
 
 	<p class="mt-4 text-sm text-slate-600 dark:text-slate-400">
 		{#if page.status === 503}
-			The frontend could not reach the Go Gin backend on port 9001. Please make sure the Air dev
-			server is running.
+			The frontend could not reach the Go Gin backend. Please ensure your backend server is running.
 		{:else if page.status === 404}
 			The requested item or resource could not be found.
 		{:else}

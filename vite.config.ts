@@ -3,6 +3,11 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { loadEnv } from 'vite';
+
+// Automatically populate process.env from .env for all server-side SSR and API routes
+const loadedEnv = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
+Object.assign(process.env, loadedEnv);
 
 export default defineConfig({
 	plugins: [

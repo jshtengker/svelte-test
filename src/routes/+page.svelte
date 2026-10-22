@@ -102,10 +102,7 @@
 					SvelteKit 5 <span class="text-indigo-400">✕</span> Go Gin Backend
 				</h1>
 				<p class="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
-					Consuming REST API on <code
-						class="rounded bg-slate-900 px-2 py-0.5 font-mono text-xs text-cyan-300"
-						>http://localhost:9001</code
-					> via SvelteKit BFF + TanStack Query memory caching.
+					Consuming REST API via SvelteKit BFF gateway with TanStack Query memory caching.
 				</p>
 			</div>
 
