@@ -3,7 +3,7 @@ import { fetchGin } from '#lib/server/api';
 import type { Order } from '#lib/types/api';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ fetch, params }) => {
-	const data = await fetchGin<Order>(`/api/v1/orders/${params.id}`, fetch);
+export const GET: RequestHandler = async ({ fetch, params, locals }) => {
+	const data = await fetchGin<Order>(`/api/v1/orders/${params.id}`, fetch, {}, locals.accessToken);
 	return json(data);
 };

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { ApiResponse } from '#lib/types/api';
 
-function getGinApiUrl(): string {
+export function getGinApiUrl(): string {
 	const url = process.env.GIN_API_URL;
 	if (!url) {
 		throw new Error('FATAL: GIN_API_URL environment variable is not defined in .env');
@@ -16,21 +16,28 @@ function getGinApiUrl(): string {
 export async function fetchGin<T>(
 	endpoint: string,
 	eventFetch: typeof fetch,
-	options: RequestInit = {}
+	options: RequestInit = {},
+	accessToken?: string | null
 ): Promise<T> {
 	const baseUrl = getGinApiUrl().replace(/\/+$/, '');
 	const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 	const url = `${baseUrl}${path}`;
 
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json',
+		Accept: 'application/json',
+		...(options.headers as Record<string, string>)
+	};
+
+	if (accessToken) {
+		headers['Authorization'] = `Bearer ${accessToken}`;
+	}
+
 	let response: Response;
 	try {
 		response = await eventFetch(url, {
 			...options,
-			headers: {
-				'Content-Type': 'application/json',
-				Accept: 'application/json',
-				...options.headers
-			}
+			headers
 		});
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : 'Unknown network error';
