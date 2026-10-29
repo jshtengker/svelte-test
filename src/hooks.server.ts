@@ -11,15 +11,20 @@ export const AUTH_COOKIE_OPTS = {
 	path: '/'
 };
 
-// Short-lived grace cache: caches rotated tokens for 15s to serve concurrent requests in 0.00ms
+// Server rotates refresh tokens on every call; caching the last pair for 15s absorbs parallel SSR subrequests to prevent replay errors.
 interface CachedRefresh {
 	tokens: AuthTokens;
 	expiresAt: number;
 }
 const recentRefreshCache = new Map<string, CachedRefresh>();
 
-// In-flight refresh promises map keyed by refreshToken to deduplicate concurrent refresh requests
-const inFlightRefreshes = new Map<string, Promise<AuthTokens | null>>();
+export type RefreshResult =
+	| { type: 'success'; tokens: AuthTokens }
+	| { type: 'invalid'; status: number; message: string }
+	| { type: 'network_error'; message: string };
+
+// Deduplicates concurrent refresh promises to ensure only a single HTTP exchange reaches the server.
+const inFlightRefreshes = new Map<string, Promise<RefreshResult>>();
 
 function isTokenExpiring(token: string, skewSeconds = 30): boolean {
 	try {
@@ -36,22 +41,20 @@ function isTokenExpiring(token: string, skewSeconds = 30): boolean {
 export async function refreshTokensSingleFlight(
 	refreshToken: string,
 	eventFetch: typeof fetch
-): Promise<AuthTokens | null> {
-	// 1. Instant return from short-lived grace cache (0ms, zero network calls)
+): Promise<RefreshResult> {
 	const cached = recentRefreshCache.get(refreshToken);
 	if (cached) {
 		if (Date.now() < cached.expiresAt) {
-			return cached.tokens;
+			return { type: 'success', tokens: cached.tokens };
 		}
 		recentRefreshCache.delete(refreshToken);
 	}
 
-	// 2. Deduplicate in-flight promises
 	if (inFlightRefreshes.has(refreshToken)) {
 		return inFlightRefreshes.get(refreshToken)!;
 	}
 
-	const promise = (async () => {
+	const promise = (async (): Promise<RefreshResult> => {
 		try {
 			const baseUrl = getGinApiUrl().replace(/\/+$/, '');
 			const res = await eventFetch(`${baseUrl}/api/v1/auth/refresh`, {
@@ -63,21 +66,46 @@ export async function refreshTokensSingleFlight(
 				body: JSON.stringify({ refresh_token: refreshToken })
 			});
 
-			if (!res.ok) return null;
-			const json = (await res.json()) as { error?: boolean; data?: AuthTokens };
-			if (json.error || !json.data) return null;
+			let json: { error?: boolean; message?: string; data?: AuthTokens } | null = null;
+			try {
+				json = (await res.json()) as { error?: boolean; message?: string; data?: AuthTokens };
+			} catch {}
+
+			if (res.status === 400 || res.status === 401 || res.status === 403) {
+				return {
+					type: 'invalid',
+					status: res.status,
+					message: json?.message || 'Refresh token expired or revoked'
+				};
+			}
+
+			if (!res.ok) {
+				return {
+					type: 'network_error',
+					message: `Server returned status ${res.status}`
+				};
+			}
+
+			if (json?.error || !json?.data) {
+				return {
+					type: 'invalid',
+					status: res.status,
+					message: json?.message || 'Failed to refresh tokens'
+				};
+			}
 
 			const tokens = json.data;
 
-			// Cache this token rotation for 15 seconds to absorb concurrent subrequests
 			recentRefreshCache.set(refreshToken, {
 				tokens,
 				expiresAt: Date.now() + 15_000
 			});
 
-			return tokens;
-		} catch {
-			return null;
+			return { type: 'success', tokens };
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Unknown connection error';
+			console.warn('[Auth Refresh] Server unreachable:', message);
+			return { type: 'network_error', message };
 		} finally {
 			inFlightRefreshes.delete(refreshToken);
 		}
@@ -94,21 +122,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = null;
 	event.locals.accessToken = null;
+	event.locals.serverOffline = false;
 
-	// Fast 0ms user profile resolution from 'usr' cookie
+	// Resolves user identity synchronously from cookie to render user-dependent UI on SSR without introducing a blocking network hop to /auth/me on every page view.
 	const usrCookie = event.cookies.get('usr');
 	if (usrCookie) {
 		try {
 			event.locals.user = JSON.parse(usrCookie) as User;
-		} catch {
-			// Stale or invalid JSON
-		}
+		} catch {}
 	}
 
-	// 1. If accessToken is missing or expiring soon, but we have a refreshToken:
 	if ((!accessToken || isTokenExpiring(accessToken)) && refreshToken) {
-		const refreshed = await refreshTokensSingleFlight(refreshToken, event.fetch);
-		if (refreshed) {
+		const refreshResult = await refreshTokensSingleFlight(refreshToken, event.fetch);
+		if (refreshResult.type === 'success') {
+			const refreshed = refreshResult.tokens;
 			accessToken = refreshed.access_token;
 			event.cookies.set('at', refreshed.access_token, {
 				...AUTH_COOKIE_OPTS,
@@ -116,28 +143,28 @@ export const handle: Handle = async ({ event, resolve }) => {
 			});
 			event.cookies.set('rt', refreshed.refresh_token, {
 				...AUTH_COOKIE_OPTS,
-				maxAge: 7 * 24 * 60 * 60 // 7 days
+				maxAge: 7 * 24 * 60 * 60
 			});
 			event.cookies.set('usr', JSON.stringify(refreshed.user), {
 				...AUTH_COOKIE_OPTS,
-				httpOnly: false,
 				maxAge: 7 * 24 * 60 * 60
 			});
 			event.locals.user = refreshed.user;
 			event.locals.accessToken = accessToken;
-		} else {
-			// Token revoked or expired past grace period -> clear stale cookies
+		} else if (refreshResult.type === 'invalid') {
 			event.cookies.delete('at', { path: '/' });
 			event.cookies.delete('rt', { path: '/' });
 			event.cookies.delete('usr', { path: '/' });
 			accessToken = null;
 			event.locals.user = null;
+		} else {
+			// Preserves session cookies during server downtime; wiping cookies on network failure would permanently log out all active users during a server restart.
+			event.locals.serverOffline = true;
 		}
 	}
 
-	// 2. Fallback profile fetch: Only on full page HTML navigations if user is still missing
 	const isApiRequest = pathname.startsWith('/api/');
-	if (accessToken && !event.locals.user && !isApiRequest) {
+	if (accessToken && !event.locals.user && !isApiRequest && !event.locals.serverOffline) {
 		try {
 			const baseUrl = getGinApiUrl().replace(/\/+$/, '');
 			const res = await event.fetch(`${baseUrl}/api/v1/auth/me`, {
@@ -153,13 +180,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 					event.locals.user = json.data;
 					event.cookies.set('usr', JSON.stringify(json.data), {
 						...AUTH_COOKIE_OPTS,
-						httpOnly: false,
 						maxAge: 7 * 24 * 60 * 60
 					});
 				}
 			} else if (res.status === 401 && refreshToken) {
-				const refreshed = await refreshTokensSingleFlight(refreshToken, event.fetch);
-				if (refreshed) {
+				const refreshResult = await refreshTokensSingleFlight(refreshToken, event.fetch);
+				if (refreshResult.type === 'success') {
+					const refreshed = refreshResult.tokens;
 					event.cookies.set('at', refreshed.access_token, {
 						...AUTH_COOKIE_OPTS,
 						maxAge: refreshed.expires_in
@@ -170,19 +197,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 					});
 					event.cookies.set('usr', JSON.stringify(refreshed.user), {
 						...AUTH_COOKIE_OPTS,
-						httpOnly: false,
 						maxAge: 7 * 24 * 60 * 60
 					});
 					event.locals.user = refreshed.user;
 					event.locals.accessToken = refreshed.access_token;
-				} else {
+				} else if (refreshResult.type === 'invalid') {
 					event.cookies.delete('at', { path: '/' });
 					event.cookies.delete('rt', { path: '/' });
 					event.cookies.delete('usr', { path: '/' });
+					event.locals.user = null;
+				} else {
+					event.locals.serverOffline = true;
 				}
 			}
 		} catch {
-			// Backend unreachable or transient failure
+			event.locals.serverOffline = true;
 		}
 	}
 
@@ -190,7 +219,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.accessToken = accessToken;
 	}
 
-	// Route Guard: Enforce strict private dashboard protection
 	const isPublicRoute =
 		pathname === '/login' ||
 		pathname === '/register' ||
@@ -201,12 +229,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		pathname.endsWith('.png') ||
 		pathname.endsWith('.ico');
 
-	// 1. If user is already authenticated, visiting /login or /register redirects to dashboard
-	if ((pathname === '/login' || pathname === '/register') && event.locals.user) {
+	if ((pathname === '/login' || pathname === '/register') && event.locals.user && !event.locals.serverOffline) {
 		throw redirect(303, '/');
 	}
 
-	// 2. If user is NOT authenticated, accessing any non-public page or API redirects to /login
 	if (!isPublicRoute && !event.locals.user) {
 		if (pathname.startsWith('/api/')) {
 			return new Response(JSON.stringify({ error: true, message: 'Unauthorized' }), {
@@ -218,6 +244,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const redirectTo =
 			pathname === '/' ? '' : `?redirectTo=${encodeURIComponent(pathname + event.url.search)}`;
 		throw redirect(303, `/login${redirectTo}`);
+	}
+
+	if (event.locals.serverOffline && pathname.startsWith('/api/') && !pathname.startsWith('/api/auth')) {
+		return new Response(
+			JSON.stringify({
+				error: true,
+				code: 'SERVER_OFFLINE',
+				message:
+					'Server is currently offline or unreachable. Please verify the server is running.'
+			}),
+			{
+				status: 503,
+				headers: { 'Content-Type': 'application/json' }
+			}
+		);
 	}
 
 	return resolve(event);

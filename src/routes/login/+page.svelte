@@ -34,26 +34,22 @@
 			return;
 		}
 
-		// Navigate to intended destination or dashboard
 		await goto(redirectTo, { invalidateAll: true });
 	}
 </script>
 
 <svelte:head>
-	<title>Sign In — SvelteKit + Gin</title>
+	<title>Sign In</title>
 </svelte:head>
 
 <div class="relative flex min-h-[calc(100vh-12rem)] items-center justify-center px-4 py-8">
-	<!-- Ambient Background Glow -->
 	<div
 		class="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-[36rem] -translate-x-1/2 rounded-full bg-linear-to-tr from-indigo-600/20 via-cyan-500/15 to-transparent blur-3xl"
 	></div>
 
-	<!-- Login Card -->
 	<div
 		class="w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/60 p-8 shadow-2xl shadow-indigo-500/5 backdrop-blur-xl transition-all sm:p-10"
 	>
-		<!-- Header -->
 		<div class="mb-8 text-center">
 			<div
 				class="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-300"
@@ -69,7 +65,6 @@
 			</p>
 		</div>
 
-		<!-- Session Expired Notification -->
 		{#if isSessionExpired && !errorMessage}
 			<div
 				class="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-300 shadow-sm"
@@ -94,7 +89,6 @@
 			</div>
 		{/if}
 
-		<!-- Error Alert -->
 		{#if errorMessage}
 			<div
 				class="mb-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-300 shadow-sm"
@@ -117,9 +111,7 @@
 			</div>
 		{/if}
 
-		<!-- Form -->
 		<form onsubmit={handleSubmit} class="space-y-5">
-			<!-- Identifier -->
 			<div>
 				<label for="identifier" class="block text-xs font-semibold tracking-wide text-slate-300">
 					Username or Email
@@ -155,7 +147,6 @@
 				</div>
 			</div>
 
-			<!-- Password -->
 			<div>
 				<div class="flex items-center justify-between">
 					<label for="password" class="block text-xs font-semibold tracking-wide text-slate-300">
@@ -197,7 +188,6 @@
 						aria-label={showPassword ? 'Hide password' : 'Show password'}
 					>
 						{#if showPassword}
-							<!-- Eye Off Icon -->
 							<svg
 								class="h-4 w-4"
 								fill="none"
@@ -212,7 +202,6 @@
 								/>
 							</svg>
 						{:else}
-							<!-- Eye Icon -->
 							<svg
 								class="h-4 w-4"
 								fill="none"
@@ -236,14 +225,12 @@
 				</div>
 			</div>
 
-			<!-- Submit Button -->
 			<button
 				type="submit"
 				disabled={isSubmitting}
 				class="group relative flex w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-xl bg-linear-to-r from-indigo-600 via-indigo-500 to-cyan-500 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.01] hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
 			>
 				{#if isSubmitting}
-					<!-- Spinner -->
 					<svg
 						class="h-4 w-4 animate-spin text-white"
 						xmlns="http://www.w3.org/2000/svg"
@@ -280,7 +267,6 @@
 			</button>
 		</form>
 
-		<!-- Footer Link -->
 		<div class="mt-8 border-t border-slate-800/80 pt-6 text-center text-xs text-slate-400">
 			Don't have an account yet?{' '}
 			<a

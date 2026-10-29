@@ -9,7 +9,7 @@ export interface AuthTokens {
 }
 
 export interface LoginRequest {
-	identifier: string; // username or email
+	identifier: string;
 	password: string;
 }
 

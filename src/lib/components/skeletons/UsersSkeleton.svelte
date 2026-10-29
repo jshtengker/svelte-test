@@ -1,5 +1,4 @@
 <div class="animate-pulse space-y-6">
-	<!-- Page Header Skeleton -->
 	<div class="flex items-center justify-between">
 		<div>
 			<div class="flex items-center gap-2.5">
@@ -10,7 +9,6 @@
 		</div>
 	</div>
 
-	<!-- Table Skeleton -->
 	<div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 shadow-xl">
 		<div class="border-b border-slate-800 bg-slate-900/90 px-6 py-4">
 			<div class="grid grid-cols-7 gap-4">
@@ -48,7 +46,6 @@
 		</div>
 	</div>
 
-	<!-- Pagination Skeleton -->
 	<div class="flex items-center justify-between border-t border-slate-800/80 pt-4">
 		<div class="h-4 w-36 rounded bg-slate-800/60"></div>
 		<div class="flex items-center gap-2">

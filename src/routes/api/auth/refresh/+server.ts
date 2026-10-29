@@ -8,18 +8,28 @@ export const POST: RequestHandler = async ({ fetch, cookies }) => {
 		throw error(401, 'No refresh token available');
 	}
 
-	const refreshed = await refreshTokensSingleFlight(refreshToken, fetch);
-	if (!refreshed) {
-		cookies.delete('at', { path: '/' });
-		cookies.delete('rt', { path: '/' });
-		throw error(401, 'Session expired or refresh token revoked');
+	const refreshResult = await refreshTokensSingleFlight(refreshToken, fetch);
+	if (refreshResult.type === 'network_error') {
+		throw error(503, refreshResult.message || 'Server authentication service unreachable');
 	}
 
+	if (refreshResult.type === 'invalid') {
+		cookies.delete('at', { path: '/' });
+		cookies.delete('rt', { path: '/' });
+		cookies.delete('usr', { path: '/' });
+		throw error(401, refreshResult.message || 'Session expired or refresh token revoked');
+	}
+
+	const refreshed = refreshResult.tokens;
 	cookies.set('at', refreshed.access_token, {
 		...AUTH_COOKIE_OPTS,
 		maxAge: refreshed.expires_in
 	});
 	cookies.set('rt', refreshed.refresh_token, {
+		...AUTH_COOKIE_OPTS,
+		maxAge: 7 * 24 * 60 * 60
+	});
+	cookies.set('usr', JSON.stringify(refreshed.user), {
 		...AUTH_COOKIE_OPTS,
 		maxAge: 7 * 24 * 60 * 60
 	});

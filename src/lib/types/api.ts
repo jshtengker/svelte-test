@@ -49,7 +49,6 @@ export interface Order {
 	ordered_at: string;
 	created_at: string;
 	updated_at: string;
-	// Joined fields from OrderListResponse
 	user_full_name?: string;
 	username?: string;
 	user_email?: string;

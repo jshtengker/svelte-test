@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 
-	// TanStack Query with SSR initialData and background revalidation
 	const productQuery = createQuery(() => ({
 		queryKey: ['product', data.product.id],
 		queryFn: () => fetchProductClient(data.product.id),
@@ -37,14 +36,12 @@
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-6">
-	<!-- Breadcrumbs -->
 	<nav class="flex items-center gap-2 text-xs text-slate-400">
 		<a href="/products" class="transition-colors hover:text-white">Products</a>
 		<span>/</span>
 		<span class="font-mono text-slate-200">{product.sku}</span>
 	</nav>
 
-	<!-- Main Detail Card -->
 	<div
 		class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-2xl backdrop-blur-md sm:p-8"
 	>
@@ -82,7 +79,6 @@
 				</p>
 			</div>
 
-			<!-- Price Card -->
 			<div
 				class="min-w-50 rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-right sm:p-5"
 			>
@@ -101,7 +97,6 @@
 			</div>
 		</div>
 
-		<!-- Specifications Grid -->
 		<div
 			class="mt-8 grid grid-cols-1 gap-4 border-t border-slate-800/80 pt-6 sm:grid-cols-2 lg:grid-cols-3"
 		>
@@ -139,7 +134,7 @@
 			>
 				<div>
 					<div class="text-xs font-medium text-slate-400">Data Source</div>
-					<div class="mt-0.5 font-mono text-xs text-indigo-300">Gin / PostgreSQL</div>
+					<div class="mt-0.5 font-mono text-xs text-indigo-300">Server API</div>
 				</div>
 				<span
 					class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400"
@@ -149,7 +144,6 @@
 			</div>
 		</div>
 
-		<!-- Action Footer -->
 		<div class="mt-8 flex items-center justify-between border-t border-slate-800/80 pt-6">
 			<a
 				href="/products"

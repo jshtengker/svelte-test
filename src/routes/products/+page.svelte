@@ -6,7 +6,6 @@
 
 	let { data }: PageProps = $props();
 
-	// TanStack Query with SSR initialData and background revalidation
 	const productsQuery = createQuery(() => ({
 		queryKey: ['products', data.currentPage, data.pageSize],
 		queryFn: () => fetchProductsClient(data.currentPage, data.pageSize),
@@ -19,7 +18,6 @@
 	let searchQuery = $state('');
 	let viewMode = $state<'table' | 'grid'>('table');
 
-	// Format price in IDR format
 	function formatPrice(priceStr: string | number) {
 		const num = typeof priceStr === 'string' ? parseFloat(priceStr) : priceStr;
 		if (isNaN(num)) return priceStr;
@@ -30,7 +28,6 @@
 		}).format(num);
 	}
 
-	// Filter loaded items by search term in client for snappy UX
 	let filteredItems = $derived(
 		products.items.filter(
 			(item: Product) =>
@@ -42,11 +39,10 @@
 </script>
 
 <svelte:head>
-	<title>Products - SvelteKit + Gin</title>
+	<title>Products</title>
 </svelte:head>
 
 <div class="space-y-6">
-	<!-- Page Header -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<div class="flex items-center gap-2.5">
@@ -66,16 +62,11 @@
 				{/if}
 			</div>
 			<p class="mt-1 text-sm text-slate-400">
-				Fetched from Go Gin endpoint <code
-					class="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-xs text-indigo-300"
-					>GET /api/v1/products</code
-				>
+				Manage catalog items, pricing, and live inventory levels.
 			</p>
 		</div>
 
-		<!-- Action bar & Controls -->
 		<div class="flex flex-wrap items-center gap-3">
-			<!-- Search Input -->
 			<div class="relative min-w-60">
 				<span
 					class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"
@@ -97,7 +88,6 @@
 				/>
 			</div>
 
-			<!-- View Mode Toggle -->
 			<div class="flex rounded-lg border border-slate-800 bg-slate-900 p-0.5">
 				<button
 					type="button"
@@ -137,7 +127,6 @@
 		</div>
 	</div>
 
-	<!-- Content Area -->
 	{#if filteredItems.length === 0}
 		<div class="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-12 text-center">
 			<div
@@ -158,7 +147,6 @@
 			</p>
 		</div>
 	{:else if viewMode === 'table'}
-		<!-- Table View -->
 		<div
 			class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 shadow-xl backdrop-blur-sm"
 		>
@@ -242,7 +230,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- Grid View -->
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each filteredItems as product (product.id)}
 				<a
@@ -289,7 +276,6 @@
 		</div>
 	{/if}
 
-	<!-- Pagination Navigation -->
 	{#if products.total_pages > 1}
 		<div
 			class="flex flex-col items-center justify-between gap-4 border-t border-slate-800/80 pt-4 text-xs text-slate-400 sm:flex-row"

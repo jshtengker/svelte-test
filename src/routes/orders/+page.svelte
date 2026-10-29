@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 
-	// TanStack Query with SSR initialData and background revalidation
 	const ordersQuery = createQuery(() => ({
 		queryKey: ['orders', data.currentPage, data.pageSize],
 		queryFn: () => fetchOrdersClient(data.currentPage, data.pageSize),
@@ -50,11 +49,10 @@
 </script>
 
 <svelte:head>
-	<title>Orders - SvelteKit + Gin</title>
+	<title>Orders</title>
 </svelte:head>
 
 <div class="space-y-6">
-	<!-- Page Header -->
 	<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<div class="flex items-center gap-2.5">
@@ -74,15 +72,11 @@
 				{/if}
 			</div>
 			<p class="mt-1 text-sm text-slate-400">
-				Fetched from Go Gin endpoint <code
-					class="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-xs text-cyan-300"
-					>GET /api/v1/orders</code
-				>
+				Monitor customer transactions, order status, and shipments.
 			</p>
 		</div>
 	</div>
 
-	<!-- Table -->
 	<div
 		class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 shadow-xl backdrop-blur-sm"
 	>
@@ -155,7 +149,6 @@
 		</div>
 	</div>
 
-	<!-- Pagination -->
 	{#if orders.total_pages > 1}
 		<div
 			class="flex items-center justify-between border-t border-slate-800/80 pt-4 text-xs text-slate-400"

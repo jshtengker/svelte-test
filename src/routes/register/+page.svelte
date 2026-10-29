@@ -45,26 +45,22 @@
 			return;
 		}
 
-		// Instant auto-login succeeded -> redirect to dashboard
 		await goto('/', { invalidateAll: true });
 	}
 </script>
 
 <svelte:head>
-	<title>Create Account — SvelteKit + Gin</title>
+	<title>Create Account</title>
 </svelte:head>
 
 <div class="relative flex min-h-[calc(100vh-12rem)] items-center justify-center px-4 py-8">
-	<!-- Ambient Background Glow -->
 	<div
 		class="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-[40rem] -translate-x-1/2 rounded-full bg-linear-to-tr from-cyan-600/15 via-indigo-600/20 to-transparent blur-3xl"
 	></div>
 
-	<!-- Register Card -->
 	<div
 		class="w-full max-w-lg rounded-2xl border border-slate-800/80 bg-slate-900/60 p-8 shadow-2xl shadow-indigo-500/5 backdrop-blur-xl transition-all sm:p-10"
 	>
-		<!-- Header -->
 		<div class="mb-8 text-center">
 			<div
 				class="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold tracking-wide text-cyan-300"
@@ -76,11 +72,10 @@
 				Create your account
 			</h1>
 			<p class="mt-2 text-xs text-slate-400 sm:text-sm">
-				Join the SvelteKit BFF + Go Gin management platform
+				Join the management platform
 			</p>
 		</div>
 
-		<!-- Error Alert -->
 		{#if errorMessage}
 			<div
 				class="mb-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-300 shadow-sm"
@@ -103,11 +98,8 @@
 			</div>
 		{/if}
 
-		<!-- Form -->
 		<form onsubmit={handleSubmit} class="space-y-4">
-			<!-- Name & Username Row -->
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				<!-- Full Name -->
 				<div>
 					<label for="fullName" class="block text-xs font-semibold tracking-wide text-slate-300">
 						Full Name <span class="text-rose-400">*</span>
@@ -126,7 +118,6 @@
 					</div>
 				</div>
 
-				<!-- Username -->
 				<div>
 					<label for="username" class="block text-xs font-semibold tracking-wide text-slate-300">
 						Username <span class="text-rose-400">*</span>
@@ -146,7 +137,6 @@
 				</div>
 			</div>
 
-			<!-- Email -->
 			<div>
 				<label for="email" class="block text-xs font-semibold tracking-wide text-slate-300">
 					Email Address <span class="text-rose-400">*</span>
@@ -182,7 +172,6 @@
 				</div>
 			</div>
 
-			<!-- Phone (Optional) -->
 			<div>
 				<div class="flex items-center justify-between">
 					<label for="phone" class="block text-xs font-semibold tracking-wide text-slate-300">
@@ -220,7 +209,6 @@
 				</div>
 			</div>
 
-			<!-- Password -->
 			<div>
 				<div class="flex items-center justify-between">
 					<label for="password" class="block text-xs font-semibold tracking-wide text-slate-300">
@@ -306,7 +294,6 @@
 				</div>
 			</div>
 
-			<!-- Submit Button -->
 			<div class="pt-2">
 				<button
 					type="submit"
@@ -351,7 +338,6 @@
 			</div>
 		</form>
 
-		<!-- Footer Link -->
 		<div class="mt-8 border-t border-slate-800/80 pt-6 text-center text-xs text-slate-400">
 			Already have an account?{' '}
 			<a

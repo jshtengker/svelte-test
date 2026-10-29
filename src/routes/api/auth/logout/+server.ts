@@ -23,11 +23,11 @@ export const POST: RequestHandler = async ({ fetch, cookies, locals }) => {
 				body: JSON.stringify({ refresh_token: refreshToken })
 			});
 		} catch (err) {
-			console.error('[Auth Logout] Go backend logout notification error:', err);
+			console.error('[Auth Logout] Server logout notification error:', err);
 		}
 	}
 
-	// Always clear cookies locally regardless of Go response
+	// Ensures local session state and cookies are revoked even if the upstream auth server is unreachable.
 	cookies.delete('at', { path: '/' });
 	cookies.delete('rt', { path: '/' });
 	cookies.delete('usr', { path: '/' });

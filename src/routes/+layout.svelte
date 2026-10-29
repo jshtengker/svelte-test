@@ -16,7 +16,6 @@
 
 	let { data, children }: LayoutProps = $props();
 
-	// Keep client authState in sync with SSR page data
 	$effect(() => {
 		authState.setUser(data.user);
 	});
@@ -82,14 +81,13 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<title>SvelteKit + Gin Dashboard</title>
+	<title>Dashboard</title>
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
 	<div
 		class="flex min-h-screen flex-col bg-slate-950 font-sans text-slate-100 selection:bg-indigo-500 selection:text-white"
 	>
-		<!-- Top Navigation -->
 		{#if isAuthRoute}
 			<header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md">
 				<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -113,7 +111,7 @@
 						</div>
 						<div>
 							<div class="flex items-center gap-1.5 text-sm font-bold tracking-tight text-white">
-								SvelteKit <span class="font-normal text-slate-500">✕</span> Gin
+								Application Portal
 							</div>
 							<div class="text-[11px] font-medium text-slate-400">Security Gateway</div>
 						</div>
@@ -129,7 +127,6 @@
 		{:else}
 			<header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md">
 				<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-					<!-- Logo / Title -->
 					<div class="flex items-center gap-8">
 						<a href="/" class="group flex items-center gap-3">
 							<div
@@ -151,13 +148,12 @@
 							</div>
 							<div>
 								<div class="flex items-center gap-1.5 text-sm font-bold tracking-tight text-white">
-									SvelteKit <span class="font-normal text-slate-500">✕</span> Gin
+									Application Portal
 								</div>
-								<div class="text-[11px] font-medium text-slate-400">BFF + TanStack Query</div>
+								<div class="text-[11px] font-medium text-slate-400">Management Console</div>
 							</div>
 						</a>
 
-						<!-- Navigation Links -->
 						<nav class="hidden items-center gap-1 md:flex">
 							{#each navItems as item (item.href)}
 								<a
@@ -174,21 +170,30 @@
 						</nav>
 					</div>
 
-					<!-- Right Status & Auth Widget -->
 					<div class="flex items-center gap-3">
-						<div
-							class="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 lg:inline-flex"
-						>
-							<span class="relative flex h-2 w-2">
-								<span
-									class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
-								></span>
-								<span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-							</span>
-							<span>Gin BFF</span>
-						</div>
+						{#if data.serverOffline}
+							<div
+								class="hidden items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 lg:inline-flex"
+							>
+								<span class="relative flex h-2 w-2">
+									<span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+								</span>
+								<span>Server Offline</span>
+							</div>
+						{:else}
+							<div
+								class="hidden items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 lg:inline-flex"
+							>
+								<span class="relative flex h-2 w-2">
+									<span
+										class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
+									></span>
+									<span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+								</span>
+								<span>Server Connected</span>
+							</div>
+						{/if}
 
-						<!-- Auth State Display -->
 						{#if authState.user}
 							<div class="flex items-center gap-2.5 border-l border-slate-800 pl-3">
 								<div class="flex items-center gap-2">
@@ -233,7 +238,6 @@
 					</div>
 				</div>
 
-				<!-- Mobile Navigation Bar -->
 				<div
 					class="flex items-center justify-between gap-2 overflow-x-auto border-t border-slate-800/60 px-4 py-2 md:hidden"
 				>
@@ -273,7 +277,12 @@
 			</header>
 		{/if}
 
-		<!-- Main Body with Instant Skeleton Loading (only when destination is not cached) -->
+		{#if data.serverOffline && !isAuthRoute}
+			<div class="border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-center text-xs text-amber-300">
+				<span class="font-semibold">Notice:</span> The server is currently offline. Your session is safely preserved. Start the server to resume live data sync.
+			</div>
+		{/if}
+
 		<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
 			{#if navigating.to && !isTargetCached(navigating.to.url.pathname)}
 				{@const targetPath = navigating.to.url.pathname}
@@ -299,13 +308,12 @@
 			{/if}
 		</main>
 
-		<!-- Minimal Footer -->
 		<footer class="border-t border-slate-800/80 py-6 text-center text-xs text-slate-400">
 			<div
 				class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 sm:flex-row sm:px-6 lg:px-8"
 			>
-				<p>Consuming Go (Gin) REST API via SvelteKit BFF + TanStack Query</p>
-				<p class="font-mono text-[11px] text-slate-400">Connected via SvelteKit BFF Gateway</p>
+				<p>Centralized Management & Reporting Portal</p>
+				<p class="font-mono text-[11px] text-slate-400">Connected to Application Server</p>
 			</div>
 		</footer>
 	</div>

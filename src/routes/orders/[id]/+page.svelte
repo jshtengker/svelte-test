@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 
-	// TanStack Query with SSR initialData and background revalidation
 	const orderQuery = createQuery(() => ({
 		queryKey: ['order', data.order.id],
 		queryFn: () => fetchOrderClient(data.order.id),
@@ -53,14 +52,12 @@
 </svelte:head>
 
 <div class="mx-auto max-w-4xl space-y-6">
-	<!-- Breadcrumbs -->
 	<nav class="flex items-center gap-2 text-xs text-slate-400">
 		<a href="/orders" class="transition-colors hover:text-white">Orders</a>
 		<span>/</span>
 		<span class="font-mono text-slate-200">{order.order_number}</span>
 	</nav>
 
-	<!-- Main Order Card -->
 	<div
 		class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-2xl backdrop-blur-md sm:p-8"
 	>
@@ -97,7 +94,6 @@
 				</p>
 			</div>
 
-			<!-- Price Card -->
 			<div
 				class="min-w-50 rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-right sm:p-5"
 			>
@@ -113,7 +109,6 @@
 			</div>
 		</div>
 
-		<!-- Customer Info Section -->
 		{#if user}
 			<div class="mt-8 rounded-xl border border-slate-800/80 bg-slate-950/50 p-5">
 				<div class="flex items-center justify-between">
@@ -146,7 +141,6 @@
 			</div>
 		{/if}
 
-		<!-- Specifications Grid -->
 		<div
 			class="mt-8 grid grid-cols-1 gap-4 border-t border-slate-800/80 pt-6 sm:grid-cols-2 lg:grid-cols-3"
 		>
@@ -182,7 +176,7 @@
 			>
 				<div>
 					<div class="text-xs font-medium text-slate-400">Data Source</div>
-					<div class="mt-0.5 font-mono text-xs text-cyan-400">Gin / PostgreSQL</div>
+					<div class="mt-0.5 font-mono text-xs text-cyan-400">Server API</div>
 				</div>
 				<span
 					class="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-400"
@@ -192,7 +186,6 @@
 			</div>
 		</div>
 
-		<!-- Action Footer -->
 		<div class="mt-8 flex items-center justify-between border-t border-slate-800/80 pt-6">
 			<a
 				href="/orders"

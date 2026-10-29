@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 
-	// TanStack Queries with SSR initialData for live background revalidation
 	const productsQuery = createQuery(() => ({
 		queryKey: ['products', 1, 4],
 		queryFn: () => fetchProductsClient(1, 4),
@@ -72,23 +71,31 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard Overview - SvelteKit + Gin BFF</title>
+	<title>Dashboard Overview</title>
 </svelte:head>
 
 <div class="space-y-8">
-	<!-- Hero / Welcome Banner -->
 	<div
 		class="relative overflow-hidden rounded-2xl border border-slate-800 bg-linear-to-r from-indigo-950/70 via-slate-900 to-slate-950 p-6 shadow-2xl sm:p-8"
 	>
 		<div class="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div class="max-w-2xl">
 				<div class="flex items-center gap-2">
-					<span
-						class="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400"
-					>
-						<span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
-						BFF + TanStack Query Active
-					</span>
+					{#if data.serverOffline}
+						<span
+							class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300"
+						>
+							<span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+							Server Offline
+						</span>
+					{:else}
+						<span
+							class="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400"
+						>
+							<span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
+							System Active
+						</span>
+					{/if}
 					{#if isSyncing}
 						<span
 							class="inline-flex animate-pulse items-center gap-1 text-xs font-medium text-cyan-400"
@@ -99,10 +106,10 @@
 					{/if}
 				</div>
 				<h1 class="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-					SvelteKit 5 <span class="text-indigo-400">✕</span> Go Gin Backend
+					System Dashboard
 				</h1>
 				<p class="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
-					Consuming REST API via SvelteKit BFF gateway with TanStack Query memory caching.
+					Real-time overview of products, orders, and customer accounts.
 				</p>
 			</div>
 
@@ -129,14 +136,43 @@
 			</button>
 		</div>
 
-		<!-- Subtle Background Decoration -->
 		<div class="absolute -top-12 -right-12 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl"></div>
 		<div class="absolute right-32 -bottom-12 h-64 w-64 rounded-full bg-cyan-600/10 blur-3xl"></div>
 	</div>
 
-	<!-- Metric Cards Grid -->
+	{#if data.serverOffline}
+		<div
+			class="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-amber-200 sm:flex-row sm:items-center sm:justify-between"
+		>
+			<div class="flex items-center gap-3">
+				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+						/>
+					</svg>
+				</div>
+				<div>
+					<h3 class="text-sm font-bold text-amber-300">The server is currently offline</h3>
+					<p class="text-xs text-amber-200/80">
+						Your authentication session is safely preserved. Start the server to resume live data sync.
+					</p>
+				</div>
+			</div>
+			<button
+				type="button"
+				onclick={refetchAll}
+				class="inline-flex cursor-pointer items-center justify-center gap-2 self-start rounded-xl border border-amber-500/40 bg-amber-500/20 px-4 py-2 text-xs font-semibold text-amber-200 transition hover:bg-amber-500/30 sm:self-center"
+			>
+				Reconnect Now
+			</button>
+		</div>
+	{/if}
+
 	<div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-		<!-- Products Metric Card -->
 		<a
 			href="/products"
 			class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg transition-all hover:border-indigo-500/50 hover:bg-slate-900"
@@ -165,7 +201,6 @@
 			</p>
 		</a>
 
-		<!-- Orders Metric Card -->
 		<a
 			href="/orders"
 			class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg transition-all hover:border-cyan-500/50 hover:bg-slate-900"
@@ -193,7 +228,6 @@
 			</p>
 		</a>
 
-		<!-- Users Metric Card -->
 		<a
 			href="/users"
 			class="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg transition-all hover:border-emerald-500/50 hover:bg-slate-900"
@@ -223,9 +257,7 @@
 		</a>
 	</div>
 
-	<!-- Two-column Section: Recent Products & Recent Orders -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-		<!-- Recent Products Preview -->
 		<div class="rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl">
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="flex items-center gap-2 text-base font-bold text-white">
@@ -258,7 +290,6 @@
 			</div>
 		</div>
 
-		<!-- Recent Orders Preview -->
 		<div class="rounded-xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl">
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="flex items-center gap-2 text-base font-bold text-white">

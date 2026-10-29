@@ -40,15 +40,15 @@ export const POST: RequestHandler = async ({ request, fetch, cookies }) => {
 		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Unknown network error';
-		console.error('[Auth Register] Failed to connect to Go backend:', message);
-		throw error(503, 'Backend authentication service unreachable');
+		console.error('[Auth Register] Failed to connect to server:', message);
+		throw error(503, 'Server authentication service unreachable');
 	}
 
 	let resJson: ApiResponse<AuthTokens>;
 	try {
 		resJson = (await res.json()) as ApiResponse<AuthTokens>;
 	} catch {
-		throw error(res.status, 'Invalid JSON response from backend');
+		throw error(res.status, 'Invalid JSON response from server');
 	}
 
 	if (!res.ok || resJson.error || !resJson.data) {
@@ -57,18 +57,16 @@ export const POST: RequestHandler = async ({ request, fetch, cookies }) => {
 
 	const tokens = resJson.data;
 
-	// Set HttpOnly cookies
 	cookies.set('at', tokens.access_token, {
 		...AUTH_COOKIE_OPTS,
 		maxAge: tokens.expires_in
 	});
 	cookies.set('rt', tokens.refresh_token, {
 		...AUTH_COOKIE_OPTS,
-		maxAge: 7 * 24 * 60 * 60 // 7 days
+		maxAge: 7 * 24 * 60 * 60
 	});
 	cookies.set('usr', JSON.stringify(tokens.user), {
 		...AUTH_COOKIE_OPTS,
-		httpOnly: false,
 		maxAge: 7 * 24 * 60 * 60
 	});
 

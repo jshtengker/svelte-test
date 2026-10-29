@@ -9,10 +9,6 @@ export function getGinApiUrl(): string {
 	return url;
 }
 
-/**
- * Standard typed server-side fetcher for the Gin backend.
- * Uses SvelteKit's event fetch for SSR cache-inlining and credential propagation.
- */
 export async function fetchGin<T>(
 	endpoint: string,
 	eventFetch: typeof fetch,
@@ -29,6 +25,7 @@ export async function fetchGin<T>(
 		...(options.headers as Record<string, string>)
 	};
 
+	// Forwards the caller's JWT to server middleware for endpoint-level authorization.
 	if (accessToken) {
 		headers['Authorization'] = `Bearer ${accessToken}`;
 	}
@@ -41,10 +38,10 @@ export async function fetchGin<T>(
 		});
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : 'Unknown network error';
-		console.error(`[Gin API] Failed to connect to ${url}:`, message);
+		console.error(`[Server API] Failed to connect to ${url}:`, message);
 		throw error(
 			503,
-			`Backend service unreachable at ${baseUrl}. Ensure your Go Gin backend is running.`
+			`Server unreachable at ${baseUrl}. Please ensure the server is running.`
 		);
 	}
 
@@ -52,13 +49,13 @@ export async function fetchGin<T>(
 	try {
 		json = (await response.json()) as ApiResponse<T>;
 	} catch {
-		throw error(response.status, `Invalid JSON response from backend (${response.statusText})`);
+		throw error(response.status, `Invalid JSON response from server (${response.statusText})`);
 	}
 
 	if (!response.ok || json.error) {
 		throw error(
 			json.status || response.status,
-			json.message || 'Error occurred while contacting backend'
+			json.message || 'Error occurred while contacting server'
 		);
 	}
 

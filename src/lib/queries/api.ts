@@ -2,15 +2,10 @@ import { browser } from '$app/env';
 import { authState } from '#lib/auth/auth.svelte';
 import type { Order, Paginated, Product, User } from '#lib/types/api';
 
-/**
- * Client-side fetch helper with reactive 401 expiration handling.
- * Calls SvelteKit's BFF endpoints (/api/...).
- * When the refresh token is expired or revoked (401), automatically
- * resets authState and transitions the browser to /login?expired=1.
- */
 async function apiFetch<T>(url: string): Promise<T> {
 	const res = await fetch(url);
 
+	// Client-side 401 indicates refresh token is expired or revoked; evicts local auth state and routes to login with return path.
 	if (res.status === 401 && browser) {
 		authState.setUser(null);
 		const currentPath = window.location.pathname;
